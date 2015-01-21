@@ -1,0 +1,76 @@
+\chapter{Introduction}
+\pagenumbering{arabic}
+
+%%==%
+This work has examined the application of GPU acceleration of \emph{Particle-In-Cell codes}, a particle simulation scheme.
+Based on previous work using Pthreads, MPI and OpenMP, this work has used Nvidia's CUDA framework to parallelize the
+simulation.
+
+The particle-in-cell method consists of modeling charged particles in an electric field, with the solving of Poisson's
+equation being an important step. With applications such as simulating the behavior of plasma or modeling particle
+acceleration, there is an interest in performing these simulations with high accuracy, and with a good performance so as
+to enable longer simulations etc.
+
+Because of the limited resources available for this project, the scope has been more on issues encountered when developing
+the simulator, rather than optimizing it for industrial or scientific use. Some questions serving as a goal for the project are:
+
+\begin{enumerate}
+	\renewcommand{\theenumi}{\alph{enumi}}
+	\item Can Particle-In-Cell simulations be implemented in CUDA? Easily? \label{list:introduction-ease}
+	\item Which issues are there when mapping the problem to CUDA? Which solutions or alternatives are available? \label{list:introduction-issues}
+	\item Which parts of the simulation turn out to be critical paths? Can these parts of the code be improved further? \label{list:introduction-bottleneck}
+\end{enumerate}
+
+%==%
+\section{Motivation}
+\subsection{Why parallelize PIC codes?}
+Particle-in-cell codes lends themselves reasonably well to parallelization, and the algorithm itself is quite simple,
+with few steps. With few dependencies between elements, the sequential part of computation need not be to large, allowing
+us to parallelize the algorithm without getting dominated by sequential code (see \ref{sec:background-speedup}).
+\subsection{Why parallelize with GPGPU?}
+GPGPU is a technology that makes use of a large number of slower cores to enable massive computational throughput, and
+can be very cost effective compared to scaling with CPUs. Since many steps of the PIC algorithm consist of running the
+same computation on all elements in a large two or three dimensional grid, GPGPU seems to be a great fit.
+
+%==%
+\section{Related Work}
+A brief introduction to previous work that serves as a base for this project.
+
+The overarching goal for the project has been to re-implement the algorithm from my advisor Anne Cathrine Elster's Ph.d.
+Parallelization Issues and Particle-In-Cell Codes (Cornell, 1994) \cite{elster94} in CUDA. This work has therefore served
+as an important theoretic background during development. Elster implemented a parallel PIC simulation with Pthreads
+that was aimed at the distributed memory computer KSR1. Due to hardware limitations the implementation was in 2D.
+The work explains the physics behind the simulation, and goes into some detail on how to optimize for performance on a
+distributed shared memory machine. Elster also demonstrated how the simulation could reproduce physical phenomena such as
+plasma wave oscillation when sufficient simulation parameters were chosen. While both SOR and FFT solvers \ref{sec:background-solvers}
+are described and explained, the implementation made use of the FFT solver.
+
+Jan C. Meyer \cite{meyer04} implemented PIC codes using MPI, as part of a project to compare cluster computer applicability to
+supercomputer problems. The simulation is based on Elster's previous work, but uses the SOR solver instead, and rewrote
+code from scratch due to problems in converting the existing work. Issues with the implementation are discussed, and it
+is suggested that the implementation can be optimized quite a bit.
+
+This was the initial goal of the masters project of Nils M. Larsgård \cite{larsgaard07}, but focus was switched to
+optimizing Elster's original code. The main topic of the work is the performance of hybrid OpenMP/MPI code, and like
+Meyer's code uses MPI for communication between nodes. While the FFTW library was used to improve the FFT solver
+performance, OpenMP was used to accelerate the SOR solver within nodes.
+
+%%==%
+\section{Thesis Outline}
+\paragraph{Introduction}
+This section, an introduction to the work, and the motivation behind it.
+\paragraph{Background}
+Some background on the physics behind Particle-In-Cell codes, along with some insight into the two solvers used. In
+addition of the recent history in parallel computing is given, with a special focus on GPGPU and CUDA.
+\paragraph{Implementation}
+Details about the implementation. Some known problems and issues are mentioned, as well as what can be done to improve
+upon the current implementation.
+\paragraph{Testing}
+Various aspects of the implementation are benchmarked. Details about the testing methodology, and suggestions for further
+tests to be done in the future.
+\paragraph{Results}
+Performance resuslts from benchmarks.
+\paragraph{Discussion}
+Interpretation of results and evaluation of the implementation. Existing flaws and potential for improvement is discussed.
+\paragraph{Conclusion}
+A summary of findings, and ideas for future work.

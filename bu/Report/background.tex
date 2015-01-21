@@ -1,0 +1,176 @@
+\chapter{Background}
+
+% ==Particle-In-Cell Codes== %
+\section{Particle-In-Cell Codes}
+A technique for solving certian PDEs. Usually involves simulating particles or
+fluid in a grid. Also for plasma simulations.
+\paragraph{Applications}
+Used for studying plasma, electrons, ions. Other applications in solid/fluid
+mechanics.
+
+% =Physics= %
+\subsection{Physics}
+This section should describe the physical basis for the simulation.
+
+% Subject of simulation %
+\subsubsection{Subject of simulation}
+What is being modeled?
+A set of particles with position velocity mass and charge. Attempting to
+determine behaviour over time. Need to find force on particles. Need to
+determine electric field from potential. Find potential from distribution of
+charge from particles. Repeat. Simple.
+
+Discrete in space and time. Details below.
+
+% Equations %
+\subsubsection{Discrete Model Equations}
+Mention that these are the equations used in Elsters phd...
+\begin{equation} \nabla^2\Phi = -\frac{\rho}{\epsilon _0} \end{equation}
+\begin{equation} E = -\nabla\Phi \end{equation}
+\begin{equation} \frac{dx}{dt} = v \end{equation}
+\begin{equation} \frac{dv}{dt} =\frac{qE}{m} \end{equation}
+
+\paragraph{Poissons equation}
+$$ \nabla^2\Phi = -\frac{\rho}{\epsilon _0}$$
+$$\frac{\partial ^2\Phi}{\partial ^2 x} + \frac{\partial^2\Phi}{\partial ^2 y} +
+\frac{\partial ^2\Phi}{\partial ^2 z}= -\frac{\rho}{\epsilon _0}$$
+Poissons equation: a PDE that relates the charge to the Laplacian of the potential.
+\subparagraph{Describe discretization implications}
+
+\paragraph{Electric field from Potential}
+$$ E = -\nabla\Phi $$
+Relates the electric field strength to the potential. The electric field
+strength at a location is proportional to the gradient of the potential,
+and is sampled at each grid vertex by taking the difference in each direction.
+
+\paragraph{Electric force from the electric field}
+$$ F_\text{electric} = qE $$
+Electrical force is defined as the field strength $E$ times the charge $q$.
+
+\paragraph{Acceleration, velocity - Electric force}
+$$ \frac{dv}{dt} = \frac{qE}{m} $$
+$$ \frac{dx}{dt} = v $$
+Knowing that the acceleration of a particle $a = \frac{F}{m} = \frac{qE}{m}$,
+we can estimate the velocity and position as $v = v_0 + a\cdot\Delta t$,
+$p = p_0 + v\cdot\Delta t$.
+\subparagraph{Describe discretization (time, space)}
+
+% Procedure %
+\subsubsection{Procedure}
+\begin{enumerate}
+	\item Find charge density.
+	\item Solve for potential.
+	\item Determine electric field from potential.
+	\item Update particles.
+\end{enumerate}
+
+% ==Solvers== %
+\section{Solvers}
+% Boundary conditions %
+\subsection{Boundary conditions}
+Outline which different boundary conditions can appear, and for which ones the
+different solvers are suited.
+
+% =FFT= ++%
+\subsection{FFT}
+Short description of the concept behind the FFT.
+\subsubsection{Fourier Transform}
+Brief explanation of the math behind  the fourier transform.
+\subsubsection{DFT}
+How the continous transform translates to discrete applications.
+\subsubsection{Cooley-Tukey FFT algorithm}
+On the C-T FFT.
+\subsubsection{Performance}
+NlogN complexity, etc.
+\subsubsection{Properties}
+Aliasing etc.
+\subsubsection{Applications}
+Some common applications of the FFT, and reasons it is used.
+
+% SOR %
+\subsection{SOR}
+\subsubsection{System of Linear Equations}
+Properties of a system of linear equations. Also how this problem is represented
+as one.
+\subsubsection{Gauss-Seidel}
+Efficient serial solver. How it translates to paralell.
+\subsubsection{Over-relaxation}
+How this works, and how it improves performance.
+\subsubsection{Performance}
+Some statistics to compare SOR to other solvers, reference point for comparison.
+\subsubsection{Properties}
+Tendency to "float" under certain boundary conditions, inconvergence etc.
+\subsubsection{Applications}
+Examples of successful application of SOR as a solver, and reasons it was used.
+
+
+%% MOVE TO MOTIVATION? %%
+
+% ==Parallel Computing== %
+\section{Parallel Computing}
+This section explains the motivations behind parallel programing and GPGPU in
+general. It should show general characteristics of the CUDA architecture and
+programming model, and show the contrast to CPU programming, mentioning both the
+benefits and trade-offs, and reasons it is different.
+
+% =Parallel computing basics %
+\subsection{Parallel computing basics}
+Briefly explain the essence of TDT4200, as much as is necessary to understand
+the rest of the report.
+\paragraph{Moore's law}
+Outline regular increase in computing power as transistor density decreased.
+\paragraph{Power wall, etc}
+Explain why new measures had to be taken to increase performance further,
+leading to increasing focus on multicore.
+\paragraph{Amdahls law, Gustafsons law}
+Explain what Amdahl and gustafsons laws mean for paralellization of serial
+programs. How to bypass the problems by inccreasing problem size.
+% ...and anything else worth mentioning. %
+%%%%
+
+
+% =GPGPU= %
+\subsection{GPGPU}
+Brief history of GPGPU, mention relationship to gustafsons law (increase
+problem size at cost of processing speed). Architechture and language agnostic,
+what are the benefits and costs of this approach.
+
+% History %
+\subsubsection{History}
+How did GPGPU come about, and how has it developed since. Status today.
+
+% Purpose %
+\subsubsection{Purpose}
+Mathematical/scientific reasons that GPGPU performs well, and why it is used.
+
+% =CUDA= %
+\subsection{CUDA}
+Specifics on the cuda preogramming language/architecture. It's origin and
+development since.
+
+% Programming model %
+\subsubsection{Programming model}
+How to write a CUDA kernel. Why one writes a kernel. How a kernel differs from
+any other funciton call.
+
+% Architecture %
+\subsubsection{Architecture}
+The CUDA architecture and how it must be taken into consideration when writing
+CUDA programs.
+\paragraph{General}
+Genral layout, function and performance of the CUDA architecture.
+\paragraph{Maxwell}
+Specifics for the Kepler and Maxwell generations.
+
+% Memory %
+\subsubsection{Memory}
+Memory management. Different kinds of memory, allocating memory, atomic
+operations etc...
+
+% cuFFT %
+\subsubsection{cuFFT}
+Details on the cuFFT framework. How it is used, performance compared to FFTW...
+
+
+%Previous work%
+\section{Previous work}

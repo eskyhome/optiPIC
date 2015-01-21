@@ -1,0 +1,24 @@
+\addvspace {10\p@ }
+\addvspace {10\p@ }
+\contentsline {figure}{\numberline {2.1}{\ignorespaces Leap frog illustration}}{7}{figure.caption.12}
+\contentsline {figure}{\numberline {2.2}{\ignorespaces Aliasing}}{10}{figure.caption.18}
+\contentsline {figure}{\numberline {2.3}{\ignorespaces Red-black ordering}}{13}{figure.caption.24}
+\contentsline {figure}{\numberline {2.4}{\ignorespaces Hierarchical structure of threads.}}{18}{figure.caption.27}
+\addvspace {10\p@ }
+\contentsline {figure}{\numberline {3.1}{\ignorespaces Trilinear interpolation of particles with mesh vertices.\relax }}{21}{figure.caption.28}
+\addvspace {10\p@ }
+\addvspace {10\p@ }
+\contentsline {figure}{\numberline {5.1}{\ignorespaces Simulation loop runtime as a function of $N_{iterations}$.\relax }}{35}{figure.caption.44}
+\contentsline {figure}{\numberline {5.2}{\ignorespaces Simulation iteration runtime as a function of grid resolution. Isotropic.\relax }}{36}{figure.caption.45}
+\contentsline {figure}{\numberline {5.3}{\ignorespaces Runtime as a function of grid resolution, with scaling along z axis.\relax }}{36}{figure.caption.46}
+\contentsline {figure}{\numberline {5.4}{\ignorespaces Runtime as a function of grid resolution, isotropic, odd valued size.\relax }}{37}{figure.caption.47}
+\contentsline {figure}{\numberline {5.5}{\ignorespaces Runtime as a function of grid resolution, isotropic, even valued size.\relax }}{37}{figure.caption.48}
+\contentsline {figure}{\numberline {5.6}{\ignorespaces Runtime as a function of the number of particles.\relax }}{38}{figure.caption.49}
+\contentsline {figure}{\numberline {5.7}{\ignorespaces Runtime as a function of both the number of particles and grid resolution. Isotropic scaling of resolution.\relax }}{39}{figure.caption.50}
+\contentsline {figure}{\numberline {5.8}{\ignorespaces Comparison of solvers. Runtime of each solver as a function of grid resolution, isotropically scaled.\relax }}{39}{figure.caption.51}
+\contentsline {figure}{\numberline {5.9}{\ignorespaces FFT solver runtime by grid resolution.\relax }}{40}{figure.caption.52}
+\contentsline {figure}{\numberline {5.10}{\ignorespaces Runtime of the determineChargesFromParticles() kernel, as a function of both grid resolution and number of particles.\relax }}{41}{figure.caption.53}
+\contentsline {figure}{\numberline {5.11}{\ignorespaces Runtime of the electricFieldFromPotential() kernel, as a function of both grid resolution and number of particles.\relax }}{42}{figure.caption.54}
+\contentsline {figure}{\numberline {5.12}{\ignorespaces Runtime of the updateParticles() kernel, as a function of both grid resolution and number of particles.\relax }}{43}{figure.caption.55}
+\addvspace {10\p@ }
+\addvspace {10\p@ }

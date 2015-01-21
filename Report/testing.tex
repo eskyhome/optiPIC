@@ -1,0 +1,306 @@
+\chapter{Testing}
+
+%==%
+\section{Testing methodology and motivation}
+In testing the implementation the goal is to see how performance is affected by various factors. This includes testing
+for different problem configurations to see which parameters have the biggest impact, and testing runtime for the
+different kernels to determine which ones among them are the most demanding.
+The parameters that are tested for are \emph{number of iterations} $N_{iterations}$, \emph{grid resolution in all
+dimensions}$n_x, n_y \text{and} n_z$, and \emph{number of particles} $N_{particles}$.
+\subsection{Procedure}
+\label{sec:testing-methodology}
+Kernel timing is done using the following procedure based on the example by Mark Harris from Nvidia on \href{http://devblogs.nvidia.com/parallelforall/how-implement-performance-metrics-cuda-cc/}{devblogs.nvidia.com/...}.
+\begin{lstlisting}
+	cudaEvent_t beginning, end;
+	cudaEventCreate(&beginning);
+	cudaEventCreate(&end);
+	
+	cudaMemcpy(...);
+	
+	cudaEventRecord(beginning);
+	// Code that should be measured goes in here.
+	kernel<<<...>>>(...);
+	cudaEventRecord(end);
+	
+	cudaMemcpy(...);
+	
+	cudaEventSynchronize(end);
+	float timing = 0.0f;
+	cudaEventElapsedTime(&milliseconds, beginning, end);
+\end{lstlisting}
+The code above works in the following way: cudaEventRecord(beginning) records the time of the next event recorded, which
+would be the kernel call. The next cudaEventRecord(end) records when the next cuda event occurs, which would be the
+cudaMemcpy call. cudaEventSynchronize(end) blocks CPU execution until the event has been recorded, ensuring a correct
+measurement. By placing the code to be measured between cudaEventRecord(beginning) and cudaEventRecord(end) we can find
+$\Delta t = end - beginning$.
+
+Other tests are timed using QueryPerformanceCounter functions provided by Windows:
+\begin{lstlisting}
+	_int64 t1;
+	
+	QueryPerformanceCounter( (LARGE_INTEGER*)&t1 );
+	//
+	//code to be timed goes here
+	//
+	_int64  t2, ldFreq;
+	QueryPerformanceCounter( (LARGE_INTEGER*)&t2 );
+	
+	QueryPerformanceFrequency( (LARGE_INTEGER*)&ldFreq );
+	double result = ((double)(t2 - t1) / (double)ldFreq) * 1000.0;
+	
+	//or
+	
+	_int64 t1;
+
+	StartTimer(&t1);
+	//
+	//code to be timed goes here
+	//
+	double result = StopTimer(t1);
+\end{lstlisting}
+Helper functions called StartTimer and StopTimer are used for simplicity, and to avoid code duplication.
+
+%%==%
+\section{System configuration}
+The test system configuration is given in the figures below.
+\subsection{Hardware}
+The relevant hardware of the test system is given in table \ref{tab:hardware}.
+\begin{table}[!htbp]
+\begin{sloppypar}
+	\begin{tabular}{|| p{1cm} | p{5cm} | p{5cm} ||}
+	\hline
+		CPU:&		\href{http://ark.intel.com/products/65523}{Core i7-3770K,\newline Intel} &
+			3.50GHz $\times$ 4(8) \\ \hline
+		RAM:&	\href{http://www.corsair.com/en/vengeancer-16gb-dual-channel-ddr3-memory-kit-cmz16gx3m2a1600c9g}{Corsair Vengeance 16 GB} &
+			2 $\times$ 8192 MB DDR3 1600MHz, 667MHz max bandwidth\\ \hline
+		MB:&		\href{http://www.asus.com/Motherboards/P8Z77V_PRO/}{P8Z77-V PRO,\newline ASUStek Computer Inc.} &
+			-\\ \hline
+		GPU:&		\href{http://www.gigabyte.com/products/product-page.aspx?pid=4319\#ov}{Nvidia GeForce 660ti, Gigabyte OC} &
+			1344 Kepler CUDA Cores, 915Mhz, 2GB GDDR5\\ \hline
+		PSU:&		\href{http://www.corsair.com/en/hx-series-hx650-power-supply-650-watt-80-plus-gold-certified-modular-psu}{Corsair HX650} &
+			650W\\
+	\hline
+	\end{tabular}
+\end{sloppypar}
+%\begin{sloppypar}
+%	\begin{tabular}{|| p{1cm} | p{5cm} | p{5cm} ||}
+%	\hline
+%	Machine:& 	MSI GE60 2PE APACHE PRO & \quad \\ \hline
+%	CPU:&		Intel Core i7-4710HQ &	2.50GHz $\times$ 4(8) \\ \hline
+%	RAM:&	8GB & 8192 MB DDR3 1600MHz, \\ \hline
+%	GPU:&		Nvidia GeForce GTX 860M & Compute capability 5.0, 640 CUDA Cores, 1020Mhz, 2GB GDDR5 2505MHz\\
+%	\hline
+%	\end{tabular}
+%\end{sloppypar}
+\caption{Hardware used in testing.}
+\label{tab:hardware}
+\end{table}
+
+\subsection{Software}
+Relevant software is listed in table \ref{tab:software}.
+\begin{table}[!htbp]
+\begin{sloppypar}
+	\begin{tabular}{|| p{3.5cm} | p{8cm} ||}
+	\hline
+		OS:& Windows 8.1\\
+		C/C++ compiler:& MS C/C++ Optimizing Compiler v17.0.60610.1\\
+		CUDA Toolkit version:& 6.5\\
+		CUDA compiler:& nvcc 6.5.13\\
+		GeForce driver:& 344.75\\
+	\hline
+	\end{tabular}
+\end{sloppypar}
+\caption{Software used in testing.}
+\label{tab:software}
+\end{table}
+
+%==%
+\section{Test parameter values}
+\label{sec:testing-parameters}
+\subsection{Constants}
+Most of the parameters remain more or less fixed across tests. This is mainly because while they affect the numerical
+accuracy of the simulation, they do not affect runtime performance. The values selected for these parameters are mostly
+the same as those used by Larsgård \cite{larsgaard07}.
+\begin{align*}
+\intertext{\textbf{Physical constants}\newline
+	\textit{Value of $\pi$ used in calculations:}}
+		\pi &= 3.14159265359,\\
+	\intertext{\textit{Value of permittivity of free space (electric constant):}}
+		\epsilon_0 &= 8.854187817 \cdot 10^{-12 } F/m,\\
+	\intertext{\textit{Value of electron charge (unit charge?):}}
+		e_{charge} &= -1.60217657 \cdot 10^{-19 } C,\\
+	\intertext{\textit{Value of electron mass:}}
+		e_{mass} &= 9.10938291 \cdot 10^{-31 } kg,\\
+\intertext{\textbf{Simulation parameters}\newline
+	\textit{ Simulation grid size:}}
+		L_x = L_y = L_z &= 0.2 m,\\
+	\intertext{\textit{Time step between iterations:}}
+		\Delta t &= 1 \cdot 10^{-6 } s,\\
+	\intertext{\textit{Drag term:}}
+		d_{drag} &= 0,\\
+\intertext{\textbf{SOR settings}\newline
+	\textit{SOR relaxation factor:}}
+		\omega &= 1.78,\\
+	\intertext{\textit{Error threshold for convergence (currently unused, fixed nr of iterations):}}
+		Err_{threshold} &= 1 \cdot 10^{-9},\\
+	\intertext{\textit{Number of SOR iterations run:}}
+		N_{SOR\_iterations} &= 128,\\
+\intertext{\textbf{Test specific}\newline
+	\textit{Grid resolution (nr of points in each direction):}}
+		n_x = n_y = n_z &= \text{default: } 64,\\
+	\intertext{\textit{Simulation iterations run:}}
+		N_{iterations} &= \text{default: } 2048,\\
+	\intertext{\textit{Number of particles simulated:}}
+		N_{particles} &= \text{default: } 256
+\end{align*}
+
+\subsection{Variables}
+The testing parameters are $N_iterations$, $N_{particles}$ and $n_x,y,z$. Other than for tests involving the number of
+iterations only the simulation loop is timed, the duration of one iteration of the simulation. Default values are $N_{particles} = 256$
+and $n_x,y,z = 64$. The FFT based solver is chosen as default.
+
+Certain simulation settings are derived from these terms, in particular the threadPerBlock and blockPerGrid settings for
+each kernel. These depends on either the grid resolution or the particle count, as shown in section \ref{sec:implementation-setup}, and
+while they are not testing parameters, they will vary as part of the testing.
+
+%==%
+\section{Description of tests}
+Descriptions of all tests done are given below. These include definitions of the parameters tested and their values, as
+well as a brief description of the motivation behind doing the specific test.
+
+Performance will be measured as runtime of the code being tested. Time will be measured using the procedure given in
+section \ref{sec:testing-methodology} (see also \href{http://devblogs.nvidia.com/parallelforall/how-implement-performance-metrics-cuda-cc/}{devblogs.nvidia.com/}\footnote{\url{http://devblogs.nvidia.com/parallelforall/how-implement-performance-metrics-cuda-cc/}}).
+
+\subsection{Number of iterations}
+This test just shows the increase in runtime as a function of the number of iterations.This should scale linearly with
+$T(N_{iterations}) = N_{iterations}\cdot T(1)$, and a deviation from this would likely indicate something being wrong, or
+at least interesting.
+
+\testtable
+	[iterations2]
+	{Iterations}
+	{$T_{simul}(N_{iterations}) -$ Simulation time, time spent in the simulation loop.}
+	{$N_{iterations} -$ Number of iterations.}
+	{$N_{iterations} \in [0, 2048]$}
+	{This test serves only as a confirmation that runtime increases linearly with the number of iterations.}
+
+\subsection{Grid resolution}
+The resolution of the simulation grid ais likely one of a few key factors in determining performance. While we would
+usually set $n_x = n_y = n_z$ and the effect of these on simulation accuracy should be equal in theory, the way the
+arrays are stored in memory is different. For instance any $n_x \in [1,16]$ would result in the same memory footprint
+due to padding (here assuming elements 8 byte wide and a 128 byte alignment requirement).
+
+\testtable
+	[grid1]
+	{Grid - Isotropic scaling of $n$}
+	{$T(n_x = n_y = n_z) -$ Application runtime.}
+	{$n_x, n_y, n_z -$ Resolution in each dimension.}
+	{$n_x = n_y = n_z \in [0,256]$}
+	{Several of the kernels use one thread per grid element, and this metric is an important one. Two competing effects
+	makes this an interesting one; a low resolution grid means less work to be done, potentially leaving multiprocessors on the
+	card idle while reducing the number of memory accesses, but a high resolution one results in fewer particles per cell,
+	thus potentially reducing write conflicts from particle-based kernels. See also test \ref{test:particles2}}
+
+\testtable
+	[grid3]
+	{Grid - Odd and even valued $n$}
+	{$T(n_x = n_y = n_z) -$ Application runtime.}
+	{$n_x, n_y, n_z -$ Resolution in each dimension.}
+	{$n_x = n_y = n_z = 2\cdot k, k \in [0,128]$
+	$n_x = n_y = n_z = 2\cdot k+1, k \in [0,128]$}
+	{Simulation time using the FFT solver with grid sizes even and odd separated, to easier compare performance.}
+	
+\testtable
+	[grid2]
+	{Grid - Scaling of $n$ along one dimension.}
+	{$T(n_x = n_y, n_z) -$ Application runtime.}
+	{$n_z -$ Resolution in z dimension.}
+	{$n_x = n_y \in [0, 256]$\newline
+	 $n_z \in [0, 256]$}
+	{Here we test the effects on performance of scaling $n$ along a single dimension, for a different configuration of the
+	other two dimensions.}
+
+\subsection{Particle count}
+First a measure of the impact the number of particles has on execution time, and then we see how different particle
+counts perform for different grid resolutions.
+\testtable
+	[particles1]
+	{Particles1 - Performance impact of particle numerosity.}
+	{$T(N_{particles}) -$ Application runtime.}
+	{$N_{particles} -$ Number of particles.}
+	{$N_{particles} \in [0, 65536]$}
+	{The number of particles affect device saturation; few particles mean less work to be done, fewer competing reads/writes,
+	  while a higher number of particles mean a larger number of multiprocessors will be kept busy.}
+
+\testtable
+	[particles2]
+	{Particles2 - Variation of both resolution and numerosity.}
+	{$T(N_{particles}, n) -$ Application runtime.}
+	{$N_{particles} -$ Number of particles.\newline
+	  $n_x = n_y = n_z -$ Resolution in each dimension.}
+	{$N_{particles} = \in [0, 65536]$\newline
+	  $n_x = n_y = n_z \in [0, 256]$}
+	{It can be interesting to see how particle number and grid resolution together affect performance, such as which
+	  parameter affects performance the most. Given that the complexity of several operations is $O(n_x\cdot n_y \cdot n_z \cdot N_{particles})$
+	  makes it interesting to see how performance scales when both are increased.}
+
+\subsection{Comparison}
+This pair of benchmarks time a single execution of each solver for varying grid sizes. The impact the grid size has on
+their performance will be interesting to see, as well as which has better performance scaling.
+\testtable
+	[solvers]
+	{Solvers - Comparing the runtime of the solvers.}
+	{$T_{solver}(Solver, n) -$ Solver execution time}
+	{The type of solver used.\newline
+	  $n -$ Grid resolution.}
+	{Solver $-$ cuFFT-based solver, SOR-solver.\newline
+	  $n \in [0, 256]$}
+	{By testing both solvers for various problem sizes we can get a measure of how well they scale, as well as which of them
+	  offers better performance.}
+	  
+\subsection{Kernel runtimes}
+These test involves measuring runtime for each kernel as functions of resolution and particle count. By timing each kernel
+and comparing these results with the solver results we can see where bottlenecks are, and may learn how the different
+kernels behave with variations of the simulation parameters. This is useful to identify what optimizations can be made
+and which kernels have the most potential.
+\testtable
+	[kernel]
+	{Kernels - Variation of resolution and particle numerosity.}
+	{$T_{kernel}(n, N_{particles}) -$ Kernel execution time.}
+	{$n_x, n_y, n_z -$ Grid resolution.\newline
+	  $N_{particles} -$ Number of particles.}
+	{$n \in [0, 256]$\newline
+	  $N_{particles} \in [0, 65536]$}
+	{Examining the performance for the different kernels for various configurations of particles and resolution, we may be
+	able to identify potential bottlenecks. These results may assist in explaining global results above.}
+
+%==%
+\section{Suggestions for further testing}\label{sec:testing-further}
+\subsection{Solver}
+It would be useful to measure which of the two solvers offer better accuracy per performance. A test here could be to
+set the number of SOR iterations so both solver use the same amount of time and then compare the numerical accuracy of
+the results, but to do this we need to be able to tell which solver gives the best result, knowledge I do not have at
+the present.
+
+Assuming that the FFT as an exact solver gives the correct answer, we could run both and then find a measure of the
+error by taking the average of the difference between the result for each element. By plotting this measure against grid
+resolution and SOR iterations we could study how these increase the accuracy of the SOR. Combining this with a plot of
+performance as a function of SOR iterations and grid resolution, we could see accuracy gain compared to performance loss,
+an interesting metric.
+
+\subsection{Single precision data type}
+If the implementation is extended to include an option of using single precision data, it would be useful to test the
+speedup this would gain us, as well as the inevitable loss of accuracy. The results of these tests could then help
+give an idea of the trade-off involved in choosing one or the other.
+
+For the single precision implementation we would also want to run most of the tests described above. At least for the
+GeForce series of GPUs, throughput for single precision operations is significantly higher than for double precision
+operations, more so than the reduction in bandwidth congestion. For this reason memory latency could become even more of
+a factor, potentially reducing actual speedup, and test results might paint a different picture.
+
+\subsection{System}Other tests that could be of interest are comparisons between running the same configuration on different systems. In
+particular this goes for the GPU involved. The Tesla series of GPUs have significantly better double precision capabilities
+compared to the GeForce series, relative to their single precision performance. A configuration that would fit on both
+systems should perform better on the Tesla because of the number of available double precision floating point units,
+even taking into account core, memory and bus clock speeds.
+%==%

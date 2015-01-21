@@ -1,0 +1,48 @@
+# PETSC 
+#PETSC_DIR =/usr/lib/petscdir/2.3.2
+#include $(PETSC_DIR)/bmake/common/base
+
+##### GNU / LINUX #######
+CC		= mpicc
+PIC_CFLAGS	= -O3 -DDEBUG -DTRACE -DPIC_SOR #-DPIC_PETSC
+LDFLAGS 	= -lm -lfftw3 -lmpi
+PIC_INCL        = -I/usr/include -I/usr/include/petsc -I/usr/lib/mpich/include
+PIC_LIBS 	= -L/usr/local/lib -L/usr/lib -L/usr/lib/mpich/lib $(PETSC_SNES_LIB)
+RM 		= rm
+
+
+PIC_EXE=pic_simulation
+
+PIC_SRCS=$(shell ls *.c)
+PIC_OBJS=$(shell ls *.c | sed 's/^/.o\//g' | sed -e 's/\.c/.o/g')
+
+
+
+# Build all
+pic:
+	@ mkdir -p .o
+	$(MAKE) $(PIC_EXE)
+
+# Build the object files
+.o/%.o: %.c
+	$(CC) $(PIC_CFLAGS) -c $< -o $@ $(PIC_INCL)
+.o/$(PIC_EXE).o: $(PIC_EXE).c
+	$(CC) $(PIC_CFLAGS) -c $< -o $@ $(PIC_INCL)
+
+# Build the executable file
+$(PIC_EXE): $(PIC_OBJS)
+	$(CC) $(PIC_CFLAGS) $(PIC_OBJS) -o $@ $(LDFLAGS) $(PIC_LIBS)
+
+# Clean up. Notice, that object files for other OS's are not deleted.
+clean:
+	rm -rf $(PIC_EXE) *~ *.bak *.o .o *.out *.err p?_* p_?_*  bilde*png
+
+# Find dependencies. Done manually, whenever file dependencies have changed.
+depend:
+	@ makedepend -Y$(INC) -p.o/ -C$(CXX) $(PIC_SRCS) > /dev/null  2>&1
+
+# DO NOT DELETE
+
+.o/ppsim.o: declarations.h
+.o/solvers.o: declarations.h
+.o/common.o: declarations.h

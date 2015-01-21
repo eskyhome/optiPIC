@@ -1,0 +1,37 @@
+#!/bin/ksh                           
+#
+# @ job_name         = PIC_SOR_32OMP
+# @ job_type         = parallel
+# @ account_no       = test001
+#
+# @ node_usage         = not_shared
+# @ node             = 1
+# @ tasks_per_node   = 1
+# @ resources = ConsumableCpus(16) ConsumableMemory(6800Mb)
+# @ network.MPI      = sn_all,,us
+# @ Requirements = ( Feature == "SMT" )
+#
+# @ class            = normal
+# @ wall_clock_limit = 2:30:00
+#
+# @ notification     = never
+# @ checkpoint       = no
+# @ restart          = no
+
+# @ environment      = COPY_ALL
+# @ env_copy         = all
+
+# @ error            = llout/$(job_name).$(jobid).err
+# @ output           = llout/$(job_name).$(jobid).out
+#
+# @ queue
+#  
+
+
+export OMP_NUM_THREADS=32
+
+for i in 0 1 2;
+do
+  ./pic_sor
+done
+exit 0

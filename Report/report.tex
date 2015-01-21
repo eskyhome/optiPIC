@@ -1,0 +1,216 @@
+\documentclass[a4paper]{report}
+% begin packages %
+\usepackage[utf8]{inputenc}
+\usepackage[usenames,dvipsnames]{xcolor} 	
+\usepackage{listings}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage[colorlinks=true, linkcolor=black, urlcolor=blue]{hyperref}
+\usepackage{todonotes}
+\usepackage{listings}
+\usepackage{graphicx}
+\usepackage[hypcap]{caption}
+\usepackage{etoolbox}
+\usepackage{xifthen}
+%\usepackage{}
+% end packages%
+
+% setup style %
+\setcounter{secnumdepth}{3}
+
+\newcounter{testdescr}
+\newcounter{testresult}
+\DeclareCaptionFormat{Test}{Test \arabic{testdescr}: #3}
+\DeclareCaptionFormat{Result}{Result \arabic{testresult}: #3}
+%new commands
+
+\newcommand{\HRule}{\rule{\linewidth}{0.5mm}}
+
+\newcommand{\addassign}[2]{
+	\mathrel{+}\;\!\!\mathrel{=}
+}
+
+\newcommand\numberthis{\addtocounter{equation}{1}\tag{\theequation}}
+
+\newcommand{\testtable}[6][ ]{
+	\begin{table}[!htbp]
+		%\centering
+		\stepcounter{testdescr}
+		\begin{tabular}{| r p{9.5 cm} |}
+			\hline
+			\textbf{Test id:} & \textbf{\arabic{testdescr} - #2}\\
+			\hline
+			\emph{Measure:}		& #3\\
+			\emph{Parameters:}	& #4\\
+			\emph{Values:}		& #5\\
+			\emph{Motivation:}		& #6\\
+			\hline
+		\end{tabular}
+		\captionsetup{format=Test, aboveskip=5pt}
+		\caption{#2}
+		\label{test:\ifstrempty{#1}{\arabic{testdescr}}{#1}}
+	\end{table}
+}
+
+\newcommand{\testresult}[3][]{
+	\begin{figure}[!htbp]
+		\centering
+		\stepcounter{testresult}
+		\makebox[\textwidth][c]{\includegraphics[width=1.2\textwidth]{figure/#2}}
+		\caption{#3}
+		\label{result:\ifstrempty{#1}{#2}{#1}}
+	\end{figure}
+}
+
+
+%end new commands
+
+\begin{document}
+\lstset{
+	language = c++,
+	tabsize = 2,
+	basicstyle = \footnotesize,
+	backgroundcolor = \color{White},
+	commentstyle = \color{OliveGreen},
+	keywordstyle = \color{Blue},
+	numberstyle = \color{Red},
+	stringstyle = \color{BrickRed},
+	frame=single,
+	morekeywords = {
+		cudaMemcpy,
+		cudaMalloc,
+		cufftResult,
+		cufftPlanMany,
+		cufftHandle,
+		cufftType,
+		cufftCreate,
+		cufftExecC2C,
+		cufftComplex,
+		cudaEvent,
+		cudaEvent\_t,
+		cudaEventCreate,
+		cudaEventRecord,
+		cudaEventSynchronize,
+		cudaEventElapsedTime,
+		__global__,
+		cudaMemcpyHostToDevice,
+		cudaMemcpyDeviceToHost
+	}
+}
+
+
+\pagenumbering{roman}
+% % Front page
+\include{frontpage}
+% Abstract
+\include{abstract}
+%TOC and stuff
+\tableofcontents
+\listoffigures
+%\listoftables
+%
+% Introduction
+\include{introduction}
+% Background
+\include{background}
+% Implementation
+\include{implementation}
+% Testing
+\include{testing}
+% Results
+\include{results}
+% Discussion
+\include{discussion}
+% Conclusion
+\include{conclusion}
+
+\begin{thebibliography}{13}
+	\bibitem{elster94}
+		Anne C. Elster,
+		"Parallelization Issues and Particle-In-Cell Codes",
+		1994,
+		Cornell University,
+		USA
+		
+	\bibitem{meyer04}
+		Jan C. Meyer,
+		"Emerging Technologies Project: Cluster Technologies, PIC codes: Eulerian data partitioning",
+		2004,
+		NTNU,
+		Norway
+	
+	\bibitem{larsgaard07}
+		Nils M. Larsgård,
+		"Parallelizing Particle-In-Cell Codes with OpenMP and MPI",
+		2007,
+		NTNU,
+		Norway
+	
+	\bibitem{libsh}
+		Intel,
+		\href{http://libsh.org/about.html}{"About Sh"},
+		\emph{last visited on 2 January 2015}
+	
+	\bibitem{top500}
+		\href{http://www.top500.org/lists/2014/11/}{"November 2014"},
+		TOP500 The List,
+		November 2014,
+		\emph{last visited 2 January 2015}
+	
+	\bibitem{nvidiasc14intro}
+		Ian Buck, Jeff Nichols and Rob Neely,
+		\href{http://on-demand.gputechconf.com/supercomputing/2014/presentation/SC401-accelerated-computing-exascale.pdf}{"GPU Acceleration: What's Next"},
+		Video recording: \url{http://on-demand.gputechconf.com/supercomputing/2014/video/SC401-accelerated-computing-exascale.html},
+		2014,
+		Supercomputing 2014,
+		Nvidia
+	
+	\bibitem{maxwell}
+		Mark Harris,
+		\href{http://devblogs.nvidia.com/parallelforall/maxwell-most-advanced-cuda-gpu-ever-made/}{"Maxwell: The Most Advanced CUDA GPU Ever Made"},
+		Nvidia developer zone - Parallel Forall,
+		18 September 2014,
+		\emph{last visited 2 January 2015}
+	
+	\bibitem{nvidiaopenmp}
+		Jeff Larkin,
+		\href{http://openmp.org/sc13/SC13_OpenMP_and_NVIDIA.pdf}{"OpenMP and NVIDIA"},
+		2013,
+		Super Computing 2013,
+		NVIDIA
+	
+	\bibitem{nvcc}
+		\href{http://docs.nvidia.com/cuda/cuda-compiler-driver-nvcc/}{"NVIDIA CUDA Compiler Driver NVCC"},
+		CUDA Toolkit Documentation,
+		1 August 2014,
+		\emph{last visited 1 January 2015}
+	
+	\bibitem{nvptx}
+		\href{http://llvm.org/docs/NVPTXUsage.html}{"User Guide for NVPTX Back-end"},
+		LLVM Compiler Infrastructure,
+		29 December 2014,
+		\emph{last visited 1 January 2015}
+	
+	\bibitem{cudaprog}
+		\href{http://docs.nvidia.com/cuda/cuda-c-programming-guide/}{"CUDA C Programming Guide"},
+		CUDA Toolkit Documentation,
+		1 August 2014,
+		\emph{last visited 2 January 2015}
+	
+	\bibitem{nvlink}
+		\href{http://www.nvidia.com/object/nvlink.html}{"NVIDIA NVLINK HIGH-SPEED INTERCONNECT"},
+		High Performance Computing,
+		2014,
+		\emph{last visited 2 January 2015}
+	
+	\bibitem{cufft-doc}
+		Name,
+		\href{http://docs.nvidia.com/cuda/cufft/}{"cuFFT"},
+		CUDA Toolkit Documentation,
+		1 August 2014,
+		\emph{last visited 2 January 2015}
+
+\end{thebibliography}
+All figures have been produced by the author using Inkscape, matplotlib and Google Draw.
+
+\end{document}
