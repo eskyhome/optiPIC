@@ -22,15 +22,14 @@ __global__ void generateParticles(Particle *particles, Config cfg){
 
 	Particle q ={
 		make_double3(0, cfg.l.y/2, cfg.l.z/2),
-		make_double3(cfg.l.x / 100 * cfg.ts, 0, 0),
-		make_double3(0, 0, 0)
+		make_double3(cfg.l.x / 100 * cfg.ts, 0, 0)
 	};
 
 	particles[idx] = q;
 }
 
-//Determine effect of a particle on its closest grid vertices. BROKEN
-__global__ void determineChargesFromParticles3D(Particle *particles, cudaPitchedPtr chargeDensity, Config cfg) {
+//Determine effect of a particle on its closest grid vertices.
+__global__ void determineChargesFromParticles(Particle *particles, cudaPitchedPtr chargeDensity, Config cfg) {
 		
 
 	int idx = blockIdx.x * blockDim.x + threadIdx.x;
@@ -81,69 +80,14 @@ __global__ void determineChargesFromParticles3D(Particle *particles, cudaPitched
 	atomicAdd(back_upper_left,			 c  *		b  * (hx - a) * cfg.rho_k);
 	atomicAdd(back_upper_right,			 c  *		b  *	   a  * cfg.rho_k);
 	return;
-	//*/
-	/*
-	char
-		*front = ((char*)chargeDensity.ptr) + k * cfg.n.y * chargeDensity.pitch,
-		*back = ((char*)chargeDensity.ptr) + (k+1)%cfg.n.z * cfg.n.y * chargeDensity.pitch;
-	double
-		*fLowerRow = (double*)(front + j * chargeDensity.pitch),
-		*fUpperRow = (double*)(front + (j+1)%cfg.n.y * chargeDensity.pitch),
-		*fll = &fLowerRow[i],
-		*flr = &fLowerRow[(i+1)%cfg.n.x],
-		*ful = &fUpperRow[i],
-		*fur = &fUpperRow[(i+1)%cfg.n.x],
-
-		*bLowerRow = (double*)(back + j * chargeDensity.pitch),
-		*bUpperRow = (double*)(back + (j+1)%cfg.n.y * chargeDensity.pitch),
-		*bll = &bLowerRow[i],
-		*blr = &bLowerRow[(i+1)%cfg.n.x],
-		*bul = &bUpperRow[i],
-		*bur = &bUpperRow[(i+1)%cfg.n.x];
-	*/
-	//       bul___________________bur
-	//       /|                   /|
-	//      / |                  / |
-	//     /  |                 /  |
-	//    /   |___a___         /   |
-	//   /   /|      /|       /    |
-	//  /   /_|_____p |      /     |
-	// ful_/__|____/|_|____fur     |
-	// |  /  bll__/_|_|_____|_____blr
-	// | /   /   /  | /     |     /
-	// |/   /___/___|/      |    /
-	// |___a___/    /       |   /
-	// |  /    |   /        |  /
-	// | /     b  c         | /
-	// |/      | /          |/
-	// fll_____|/__________flr
-	// (i, j)            (i+1, j)
-	
-	//TODO Synchronize/Optimize write to memory:
-	/*
-	atomicAdd(fll, (hz - c) * (hy - b) * (hx - a) * cfg.rho_k);
-	atomicAdd(ful, (hz - c) *		b  * (hx - a) * cfg.rho_k); 
-	atomicAdd(flr, (hz - c) * (hy - b) *	   a  * cfg.rho_k);
-	atomicAdd(fur, (hz - c) *		b  *	   a  * cfg.rho_k);
-	
-	atomicAdd(bll,		 c	* (hy - b) * (hx - a) * cfg.rho_k);
-	atomicAdd(bul,		 c	*		b  * (hx - a) * cfg.rho_k); 
-	atomicAdd(blr,		 c	* (hy - b) *	   a  * cfg.rho_k);
-	atomicAdd(bur,		 c	*		b  *	   a  * cfg.rho_k);
-	*/
 }
 
-__global__ void electricFieldFromPotential3D(cudaPitchedPtr potential, cudaPitchedPtr E, Config cfg) {
+__global__ void electricFieldFromPotential(cudaPitchedPtr potential, cudaPitchedPtr E, Config cfg) {
 	int i = blockIdx.x * blockDim.x + threadIdx.x,
 		j = blockIdx.y * blockDim.y + threadIdx.y,
 		k = blockIdx.z * blockDim.z + threadIdx.z;
 	if(i >= cfg.n.x || j >= cfg.n.y || k >= cfg.n.z) {return;}
-	//        top  back
-	//          \  /
-	// left __ __\/__ __ right
-	//           /\
-	//          /  \
-	//      front  down
+
 	char *pptr = (char*)potential.ptr;
 	size_t ptch = potential.pitch;
 
@@ -168,17 +112,7 @@ __global__ void electricFieldFromPotential3D(cudaPitchedPtr potential, cudaPitch
 		*up		= (double*)(pptr + i_center + j_up	   + k_center),
 		*front	= (double*)(pptr + i_center + j_center + k_front),
 		*back	= (double*)(pptr + i_center + j_center + k_back),
-		/*
-	double
-		top		= *(double*)(((char*) potential.ptr) + (j+1)%cfg.n.y * potential.pitch + k * cfg.n.y * potential.pitch + i*sizeof(double) ),
-		bottom	= *(double*)(((char*) potential.ptr) + (j-1)%cfg.n.y * potential.pitch + k * cfg.n.y * potential.pitch + i*sizeof(double) ),
-		
-		front	= *(double*)(((char*) potential.ptr) + j * potential.pitch + (k+1)%cfg.n.z * cfg.n.y * potential.pitch + i*sizeof(double) ),
-		back	= *(double*)(((char*) potential.ptr) + j * potential.pitch + (k-1)%cfg.n.z * cfg.n.y * potential.pitch + i*sizeof(double) ),
-		
-		left	= *(double*)(((char*) potential.ptr) + j * potential.pitch + k * cfg.n.y * potential.pitch + (i-1)%cfg.n.x*sizeof(double) ),
-		right	= *(double*)(((char*) potential.ptr) + j * potential.pitch + k * cfg.n.y * potential.pitch + (i+1)%cfg.n.x*sizeof(double) ),
-		*/
+
 		E_x = *left - *right,
 		E_y = *up  - *down,
 		E_z = *front - *back;
@@ -186,7 +120,7 @@ __global__ void electricFieldFromPotential3D(cudaPitchedPtr potential, cudaPitch
 	*(double3*)(((char*) E.ptr) + i * sizeof(double3) + j * E.pitch + k * cfg.n.y * E.pitch) = E_val;
 }
 
-__device__ double3 electricFieldAtPoint3D(double3 position, cudaPitchedPtr E, Config cfg) {
+__device__ double3 electricFieldAtPoint(double3 position, cudaPitchedPtr E, Config cfg) {
 	double
 		hx = cfg.l.x / cfg.n.x,
 		hy = cfg.l.y / cfg.n.y,
@@ -226,36 +160,6 @@ __device__ double3 electricFieldAtPoint3D(double3 position, cudaPitchedPtr E, Co
 		bul	= *(double3*)(ptr + i_left  + j_upper + k_back),
 		bur	= *(double3*)(ptr + i_right + j_upper + k_back),
 		val;
-
-//==//
-/*
-	double3
-		*fLowerRow = (double3*)(((char*)E.ptr) + j				* E.pitch + k * cfg.n.y * E.pitch),
-		*fUpperRow = (double3*)(((char*)E.ptr) + (j+1)%cfg.n.y	* E.pitch + k * cfg.n.y * E.pitch),
-		fll = fLowerRow[i],
-		flr = fLowerRow[(i+1)%cfg.n.x],
-		ful = fUpperRow[i],
-		fur = fUpperRow[(i+1)%cfg.n.x],
-
-		*bLowerRow = (double3*)(((char*)E.ptr) + j				* E.pitch + (k+1)%cfg.n.z * cfg.n.y * E.pitch),
-		*bUpperRow = (double3*)(((char*)E.ptr) + (j+1)%cfg.n.y	* E.pitch + (k+1)%cfg.n.z * cfg.n.y * E.pitch),
-		bll = bLowerRow[i],
-		blr = bLowerRow[(i+1)%cfg.n.x],
-		bul = bUpperRow[i],
-		bur = bUpperRow[(i+1)%cfg.n.x],
-	
-		val;*/
-	// (i, j+1)        (i+1, j+1)
-	// ul------------------ur     b
-	// |                    |     /
-	// |                    |    /
-	// |                    |   /
-	// |---a---p            |  f
-	// |       |            |
-	// |       b            |
-	// |       |            |
-	// ll------------------lr
-	// (i, j)            (i+1, j)
 
 	val.x
 		= fll.x * (hz - c) * (hy - b) * (hx - a)
@@ -306,22 +210,22 @@ __device__ double wrap(double value, double max) {
 }
 
 //Update speed and position of the particles.
-__global__ void updateParticles3D(Particle particles[], cudaPitchedPtr E, double timeStep, Config cfg) {
+__global__ void updateParticles(Particle particles[], cudaPitchedPtr E, double timeStep, Config cfg) {
 	
 	int idx = blockIdx.x * blockDim.x + threadIdx.x;
 	//Ensure index is within bounds.
 	if (idx >= cfg.particles) {return;}
 	Particle p = particles[idx];
 	
-	p.electricfield = electricFieldAtPoint3D(p.position, E, cfg);
+	double3 electricfield = electricFieldAtPoint(p.position, E, cfg);
 	// F = q * E
 	// a = F / m
 	// v = v0 + a * t - drag
 	// v = v0 + (q/m) * E * t
 	double
-		ax = p.electricfield.x * cfg.charge_by_mass,
-		ay = p.electricfield.y * cfg.charge_by_mass,
-		az = p.electricfield.z * cfg.charge_by_mass,
+		ax = electricfield.x * cfg.charge_by_mass,
+		ay = electricfield.y * cfg.charge_by_mass,
+		az = electricfield.z * cfg.charge_by_mass,
 		//v^(n+1/2) * prev = v^(n-1/2)
 		prev = (1 - cfg.drag * cfg.ts);
 
@@ -343,7 +247,7 @@ __global__ void updateParticles3D(Particle particles[], cudaPitchedPtr E, double
 }
 
 //Solve and normalize
-__global__ void solve3D(cudaPitchedPtr freq, Config cfg) {
+__global__ void solve(cudaPitchedPtr freq, Config cfg) {
 	int i = blockIdx.x * blockDim.x + threadIdx.x,
 		j = blockIdx.y * blockDim.y + threadIdx.y,
 		k = blockIdx.z * blockDim.z + threadIdx.z;
@@ -368,7 +272,6 @@ __global__ void solve3D(cudaPitchedPtr freq, Config cfg) {
 	*(cufftDoubleComplex*)((char*)freq.ptr + offset) = val;
 }
 
-
 __global__ void initSOR(cudaPitchedPtr Rho, cudaPitchedPtr Phi, Config cfg) {
 	int i = blockIdx.x * blockDim.x + threadIdx.x,
 			j = blockIdx.y * blockDim.y + threadIdx.y,
@@ -383,7 +286,7 @@ __global__ void initSOR(cudaPitchedPtr Rho, cudaPitchedPtr Phi, Config cfg) {
 		double charge = *(double*)((char*)Rho.ptr + offset);
 		*(double*)(((char *) Phi.ptr) + offset) = charge * h2 / (cfg.epsilon * 6);
 }
-__global__ void SOR3D (cudaPitchedPtr Phi, Config cfg, int flag) {
+__global__ void SOR(cudaPitchedPtr Phi, Config cfg, int flag) {
 	int i = blockIdx.x * blockDim.x + threadIdx.x,
 		j = blockIdx.y * blockDim.y + threadIdx.y,
 		k = 2 * (blockIdx.z * blockDim.z + threadIdx.z) + (i+j+flag)%2;

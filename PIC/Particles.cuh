@@ -20,6 +20,7 @@ inline void cudaAssert(cudaError_t code, const char *file, int line, bool abort=
 		fprintf(stdout, "CUDA error: %s in file %s, line %d\n", cudaGetErrorString(code), file, line);
 	}
 }
+
 static char *mkString[9] =
 {
 	"CUFFT_SUCCESS",
@@ -32,12 +33,19 @@ static char *mkString[9] =
 	"CUFFT_SETUP_FAILED",
 	"CUFFT_INVALID_SIZE"
 };
-
 #define cufftChk(ans) { cufftAssert((ans), __FILE__, __LINE__); }
 inline void cufftAssert(cufftResult_t code, const char *file, int line, bool abort=true) {
 	if (code != CUFFT_SUCCESS) {
 		fprintf(stdout, "CUFFT error: %s in file %s, line %d\n", mkString[code], file, line);
 	}
+}
+
+#define errCheck(fun) {kernelErrCheck(__FILE__, __LINE__)}
+inline void kernelErrCheck(const char *f, int l){
+cudaError_t err = cudaPeekAtLastError();
+cudaAssert(err, f, l);
+err = cudaDeviceSynchronize();
+cudaAssert(err, f, l);
 }
 //====//
 
@@ -45,8 +53,7 @@ inline void cufftAssert(cufftResult_t code, const char *file, int line, bool abo
 struct Particle {
 	double3 position;
 	double3 velocity;
-	double3 electricfield;
-	double3 padding;
+	//double2 padding;
 };
 
 struct Config{
@@ -108,24 +115,23 @@ inline Particle randParticle(Config cfg) {
 			cfg.l.z/2 + z
 		),
 		//make_double2(randDouble(-HX, HX), randDouble(-HY, HY)),
-		make_double3(0/*cfg.l.x/(500 * cfg.ts)*/, 0, 0),
-		make_double3(0, 0, 0)
+		make_double3(0/*cfg.l.x/(500 * cfg.ts)*/, 0, 0)
 	};
 	return p;
 }
 
 __global__ void generateParticles(Particle *particles, Config cfg);
 
-__global__ void determineChargesFromParticles3D(Particle *particles, cudaPitchedPtr chargeDensity, Config cfg);
+__global__ void determineChargesFromParticles(Particle *particles, cudaPitchedPtr chargeDensity, Config cfg);
 
-__global__ void electricFieldFromPotential3D(cudaPitchedPtr potential, cudaPitchedPtr E, Config cfg);
+__global__ void electricFieldFromPotential(cudaPitchedPtr potential, cudaPitchedPtr E, Config cfg);
 
-__global__ void updateParticles3D(Particle *particles, cudaPitchedPtr E, double timeStep, Config cfg);
+__global__ void updateParticles(Particle *particles, cudaPitchedPtr E, double timeStep, Config cfg);
 
-__global__ void solve3D(cudaPitchedPtr freq, Config cfg);
+__global__ void solve(cudaPitchedPtr freq, Config cfg);
 
 __global__ void initSOR(cudaPitchedPtr Rho, cudaPitchedPtr Phi, Config cfg);
-__global__ void SOR3D(cudaPitchedPtr Phi, Config cfg, int flag);
+__global__ void SOR(cudaPitchedPtr Phi, Config cfg, int flag);
 
 void allocateMemory3D(Particle **particles, cudaPitchedPtr *chargeDensity, cudaPitchedPtr *potential, cudaPitchedPtr *E, cudaPitchedPtr *freq, Config cfg);
 
