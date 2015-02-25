@@ -88,7 +88,6 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>cudart.lib;cufft.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>cuda.lib;cudart.lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <OutputFile />
     </Link>
     <CudaCompile>
       <CodeGeneration>compute_30,sm_30</CodeGeneration>
@@ -149,18 +148,32 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <CudaCompile Include="kernels_3d.cu" />
-    <CudaCompile Include="Main.cu">
+    <ClInclude Include="ArrayPrinter.cuh" />
+    <ClInclude Include="cfg.cuh" />
+    <ClInclude Include="dependencies.cuh" />
+    <ClInclude Include="kernel_helper.cuh" />
+    <ClInclude Include="Particle.cuh" />
+    <ClInclude Include="pic_utils.cuh" />
+    <ClInclude Include="simplified_kernels.cuh" />
+    <ClInclude Include="structs.cuh" />
+    <ClInclude Include="Tracer.cuh" />
+  </ItemGroup>
+  <ItemGroup>
+    <CudaCompile Include="Particle.cu" />
+    <CudaCompile Include="pic.cu" />
+    <CudaCompile Include="simplified_kernels.cu" />
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="settings.cfg">
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</DeploymentContent>
       <FileType>Document</FileType>
-    </CudaCompile>
+    </Text>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Particles.cuh" />
-  </ItemGroup>
-  <ItemGroup>
-    <CudaCompile Include="utils.cu">
-      <FileType>CppCode</FileType>
-    </CudaCompile>
+    <ClCompile Include="cfg.cpp" />
+    <ClCompile Include="Tracer.cu">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

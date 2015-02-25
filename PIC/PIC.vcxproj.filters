@@ -15,19 +15,56 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <CudaCompile Include="Main.cu">
+    <CudaCompile Include="simplified_kernels.cu">
       <Filter>Source Files</Filter>
     </CudaCompile>
-    <CudaCompile Include="utils.cu">
+    <CudaCompile Include="pic.cu">
       <Filter>Source Files</Filter>
     </CudaCompile>
-    <CudaCompile Include="kernels_3d.cu">
+    <CudaCompile Include="Particle.cu">
       <Filter>Source Files</Filter>
     </CudaCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Particles.cuh">
+    <ClInclude Include="dependencies.cuh">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="simplified_kernels.cuh">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="structs.cuh">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="pic_utils.cuh">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="kernel_helper.cuh">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Tracer.cuh">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="cfg.cuh">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Particle.cuh">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ArrayPrinter.cuh">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="cfg.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Tracer.cu">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="settings.cfg">
+      <Filter>Resource Files</Filter>
+    </Text>
   </ItemGroup>
 </Project>
