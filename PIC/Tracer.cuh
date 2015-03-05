@@ -36,6 +36,8 @@ public:
 	};
 
 	void appendTrace() {
+		if (next == iterations)
+			return;
 		cudaChk(cudaMemcpyAsync(&data[next], target, objects * sizeof(Object), cudaMemcpyDeviceToHost, stream));
 		next++;
 	};
@@ -44,6 +46,7 @@ public:
 		for (size_t o = 0; o < objects; o++){
 			*file << o << ":\t";
 			for (size_t i = 0; i < iterations; i++){
+				Particle p = data[i * objects + o];
 				*file << data[i * objects + o].str() << ",    ";
 			}
 			*file << "\n\t";

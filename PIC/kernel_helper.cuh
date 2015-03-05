@@ -4,17 +4,18 @@
 #define PIC_KERNEL_HELPERS_DEFINED
 
 //Atomic add for doubles
-__device__  void atomicAdd(double *address, double val) {
+__device__  double atomicAdd(double *address, double val) {
 	unsigned long long int* address_as_ull = (unsigned long long int*)address;
 	unsigned long long int old = *address_as_ull, assumed;
 
 	do {
 		assumed = old;
-#if __CUDA_ARCH__ >= 110
+//#if __CUDA_ARCH__ >= 110
 		old = atomicCAS(address_as_ull, assumed,
 			__double_as_longlong(val + __longlong_as_double(assumed)));
-#endif
+//#endif
 	} while (assumed != old);
+	return __longlong_as_double(old);
 }
 
 //Add two vectors

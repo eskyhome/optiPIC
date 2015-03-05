@@ -60,11 +60,13 @@ namespace pic{
 	void sorsolver_host(cudaStream_t streamCalc, Config cfg){
 		sorinit_kernel << <cfg.exec_cfg.nbg, cfg.exec_cfg.tbg, 0, streamCalc >> >(d_rhophi, d_rhophi, cfg);
 		errCheck();
+		size_t shared_size = 2 * cfg.exec_cfg.tbg.x * 2 * cfg.exec_cfg.tbg.y * 2 * cfg.exec_cfg.tbg.z * sizeof(double);
+
 		for (int it_sor = 0; it_sor < cfg.sor_iterations; it_sor++) {
-			sorsolver_kernel << <cfg.exec_cfg.nbsor, cfg.exec_cfg.tbg, 0, streamCalc >> >(d_rhophi, cfg, 0);
+			sorsolver_shared << <cfg.exec_cfg.nbg, cfg.exec_cfg.tbg, shared_size, streamCalc >> >(d_rhophi, cfg, 0);
 			errCheck();
-			sorsolver_kernel << <cfg.exec_cfg.nbsor, cfg.exec_cfg.tbg, 0, streamCalc >> >(d_rhophi, cfg, 1);
-			errCheck();
+			//sorsolver_kernel << <cfg.exec_cfg.nbsor, cfg.exec_cfg.tbg, shared_size, streamCalc >> >(d_rhophi, cfg, 1);
+			//errCheck();
 		}
 	}
 
@@ -93,7 +95,9 @@ namespace pic{
 		
 		//Allocate arrays
 		cudaChk(cudaMalloc(&d_particles, cfg.particles * sizeof(Particle)));
+		initParticles(d_particles, cfg);
 		Tracer<Particle> *tf = new Tracer<Particle>(streamTrace, (cfg.iterations + 1), cfg.particles, d_particles, "_particles");
+		tf->appendTrace();
 
 		size_t
 			rhophiSize = cfg.n.x * cfg.n.y * cfg.n.z * sizeof(double),
@@ -103,8 +107,6 @@ namespace pic{
 		ArrayPrinter<double> *rhophiPrinter = new ArrayPrinter<double>(cfg.iterations, cfg.n.x, cfg.n.y, cfg.n.z, d_rhophi, "rhopi");
 		ArrayPrinter<double4> *efreqPrinter = new ArrayPrinter<double4>(cfg.iterations, cfg.n.x, cfg.n.y, cfg.n.z, d_efreq, "efreq");
 
-		initParticles(d_particles, cfg);
-		tf->appendTrace();
 		//loop
 		cudaChk(cudaMemset(d_efreq, 0, efreqSize));
 		int iteration = 0;
@@ -154,6 +156,6 @@ int main(int argc, const char* argv[]){
 #ifndef TRACE
 	cfg.iterations = 4;
 #endif
-	int res = pic::run(cfg);
+	int res = pic::run(cfg, false);
 	return res;
 }

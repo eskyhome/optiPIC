@@ -70,6 +70,64 @@ __global__ void sorsolver_kernel(double* phi, Config cfg, size_t flag) {
 
 	phi[i + j + k] = val;
 }
+__global__ void sorsolver_shared(double* phi, Config cfg, size_t flag){
+	extern __shared__ double sm[];
+	size_t
+		di = 1,
+		dj = cfg.n.x,
+		dk = cfg.n.x * cfg.n.y,
+		i = (blockIdx.x * blockDim.x + threadIdx.x) * di,
+		j = (blockIdx.y * blockDim.y + threadIdx.y) * dj,
+		k = (blockIdx.z * blockDim.z + threadIdx.z) * dk,
+		dx = 1,
+		dy = blockDim.x,
+		dz = blockDim.x * blockDim.y,
+		x = (threadIdx.x + 1) * dx,
+		y = (threadIdx.y + 1) * dy,
+		z = (threadIdx.z + 1) * dz;
+	if (i >= cfg.n.x || j >= cfg.n.y || k >= cfg.n.z) { return; }
+
+	//Copy data into shared memory:
+	sm[x + y + z] = phi[i + j + k];
+	__syncthreads();
+	
+	//Copy boundaries:
+	if (x == 0)
+		sm[x - dx + y + z] = phi[i - di + j + k];
+	else if (x == blockDim.x-1)
+		sm[x + dx + y + z] = phi[i + di + j + k];
+	__syncthreads();
+
+	if (y == 0)
+		sm[x + y - dy + z] = phi[i + j - dj + k];
+	else if (y == blockDim.y - 1)
+		sm[x + y + dy + z] = phi[i + j + dj + k];
+	__syncthreads();
+
+	if (z == 0)
+		sm[x + y + z - dz] = phi[i + j + k - dk];
+	else if (z == blockDim.z - 1)
+		sm[x + y + z + dz] = phi[i + j + k + dk];
+	__syncthreads();
+	
+	//Done
+
+	double
+		center	= sm[x + y + z],
+		left	= sm[x-dx + y + z],
+		right	= sm[x+dx + y + z],
+		down	= sm[x + y-dy + z],
+		up		= sm[x + y+dy + z],
+		front	= sm[x + y + z-dz],
+		back	= sm[x + y + z+dz],
+		tmp, val;
+
+	tmp = (left + right + down + up + front + back) / 6;
+	val = center + cfg.omega * (tmp - center);
+	
+	__syncthreads();
+	phi[i + j + k] = val;
+}
 //Saturate phi with initial values from rho
 __global__ void sorinit_kernel(double* phi, double* rho, Config cfg) {
 	size_t
@@ -156,6 +214,7 @@ __global__ void particleUpdate_kernel(Particle* particles, double4* E, double* r
 	p.velocity = add_v(p.velocity, mul_s(a, cfg.ts));
 
 	p.position = add_v(p.position, mul_s(p.velocity, cfg.ts));
+	p.wrap(cfg.l);
 
 	particles[idx] = p;
 

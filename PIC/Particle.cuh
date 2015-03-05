@@ -47,6 +47,21 @@ public:
 		return st.str();
 	};
 
+	__device__ void wrap(double3 limits){
+		if (position.x > limits.x || position.x < 0.0){
+			double num = floor(position.x / limits.x);
+			position.x -= num * limits.x;
+		}
+		if (position.y > limits.y || position.y < 0.0){
+			double num = floor(position.y / limits.y);
+			position.y -= num * limits.y;
+		}
+		if (position.z > limits.z || position.z < 0.0){
+			double num = floor(position.z / limits.z);
+			position.z -= num * limits.z;
+		}
+	};
+
 private:
 	static std::random_device sg;
 	static double seed;
